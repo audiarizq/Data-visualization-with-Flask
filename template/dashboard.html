@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Population Pulse — Indonesia</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root { --ink: #14213d; --muted: #718096; --paper: #f7f8fc; --orange: #f28c28; --blue: #2f80ed; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    .hero { background: linear-gradient(120deg, #14213d 0%, #243b65 65%, #315d92 100%); color: white; padding: 34px max(24px, calc((100% - 1180px) / 2)); }
+    .hero-inner { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+    .eyebrow { color: #ffc078; font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1 { margin: 8px 0 7px; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.04em; }
+    .hero p { color: #d8e2f2; margin: 0; max-width: 590px; line-height: 1.6; }
+    .filter { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); border-radius: 14px; padding: 14px; min-width: 250px; }
+    .filter label { display: block; color: #d8e2f2; font-size: 12px; margin-bottom: 8px; }
+    select { border: 0; border-radius: 8px; padding: 9px; color: var(--ink); background: white; font-weight: 700; }
+    .filter select { width: 48%; }
+    main { max-width: 1180px; margin: 0 auto; padding: 25px 24px 45px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
+    .card { background: white; border: 1px solid #e7eaf1; border-radius: 18px; padding: 20px; box-shadow: 0 8px 25px rgba(20,33,61,.05); }
+    .stat-label { color: var(--muted); font-size: 13px; }
+    .stat-value { display: block; font-size: clamp(23px, 3vw, 34px); font-weight: 850; margin: 7px 0 4px; letter-spacing: -.04em; }
+    .stat-note { color: #98a2b3; font-size: 12px; }
+    .accent { color: var(--orange); }
+    .layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 18px; }
+    .wide { min-width: 0; }
+    .card-title { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 15px; }
+    h2 { font-size: 17px; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 12px; margin: 0; }
+    .chart-wrap { height: 350px; position: relative; }
+    .insight { background: #fff6e9; border-color: #ffe1b5; }
+    .insight h2 { color: #a85908; }
+    .insight p { color: #704b26; line-height: 1.65; font-size: 14px; }
+    .table-wrap { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    th, td { text-align: left; padding: 11px 8px; border-bottom: 1px solid #edf0f5; }
+    th { color: var(--muted); font-weight: 600; }
+    td:last-child, th:last-child { text-align: right; }
+    footer { color: var(--muted); font-size: 12px; margin-top: 17px; }
+    @media (max-width: 760px) { .hero-inner, .layout { display: block; } .filter { margin-top: 22px; } .stats { grid-template-columns: 1fr; } .layout .card + .card { margin-top: 18px; } }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow">Data story · Indonesia</div>
+        <h1>Population Pulse</h1>
+        <p>Melihat perubahan jumlah penduduk Indonesia dari waktu ke waktu dalam satu tampilan yang ringkas.</p>
+      </div>
+      <div class="filter">
+        <label>Rentang tahun analisis</label>
+        <select id="mulai" aria-label="Tahun awal"></select>
+        <select id="akhir" aria-label="Tahun akhir"></select>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="stats">
+      <div class="card"><span class="stat-label">Populasi terbaru</span><strong class="stat-value accent" id="terbaru">—</strong><span class="stat-note" id="tahun-terbaru">Memuat data...</span></div>
+      <div class="card"><span class="stat-label">Pertumbuhan dalam periode</span><strong class="stat-value" id="pertumbuhan">—</strong><span class="stat-note">Dibandingkan tahun awal pilihan</span></div>
+      <div class="card"><span class="stat-label">Rata-rata populasi</span><strong class="stat-value" id="rata-rata">—</strong><span class="stat-note">Rata-rata seluruh tahun terpilih</span></div>
+    </section>
+
+    <section class="layout">
+      <article class="card wide">
+        <div class="card-title"><div><h2>Perjalanan jumlah penduduk</h2><p class="sub">Satuan: jiwa · Data tahunan</p></div><span class="eyebrow" style="color:var(--blue)">1960—2025</span></div>
+        <div class="chart-wrap"><canvas id="grafikPopulasi"></canvas></div>
+      </article>
+      <aside class="card insight">
+        <h2>Catatan data</h2>
+        <p>Grafik memperlihatkan tren populasi Indonesia yang meningkat sepanjang periode pengamatan. Gunakan pilihan rentang tahun untuk melihat perubahan pada periode tertentu.</p>
+        <p><strong>Sumber:</strong><br>populasi_indonesia.csv</p>
+      </aside>
+      <article class="card wide">
+        <div class="card-title"><div><h2>Lima tahun terakhir</h2><p class="sub">Ringkasan data paling mutakhir</p></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Tahun</th><th>Jumlah penduduk</th></tr></thead><tbody id="tabelTerbaru"></tbody></table></div>
+      </article>
+    </section>
+    <footer>Dashboard dibuat menggunakan Flask dan Chart.js.</footer>
+  </main>
+
+  <script>
+    const MIN_TAHUN = {{ tahun_min }};
+    const MAX_TAHUN = {{ tahun_max }};
+    let chart;
+    const formatAngka = angka => new Intl.NumberFormat('id-ID').format(angka);
+    const tahunOptions = (select, nilai) => {
+      for (let tahun = MIN_TAHUN; tahun <= MAX_TAHUN; tahun++) {
+        const option = new Option(tahun, tahun, tahun === nilai, tahun === nilai);
+        select.add(option);
+      }
+    };
+    tahunOptions(document.getElementById('mulai'), MIN_TAHUN);
+    tahunOptions(document.getElementById('akhir'), MAX_TAHUN);
+
+    async function muatData() {
+      let mulai = Number(document.getElementById('mulai').value);
+      let akhir = Number(document.getElementById('akhir').value);
+      if (mulai > akhir) { [mulai, akhir] = [akhir, mulai]; document.getElementById('mulai').value = mulai; document.getElementById('akhir').value = akhir; }
+      const query = `?mulai=${mulai}&akhir=${akhir}`;
+      const [ringkasan, populasi] = await Promise.all([
+        fetch('/api/ringkasan' + query).then(response => response.json()),
+        fetch('/api/populasi' + query).then(response => response.json())
+      ]);
+      document.getElementById('terbaru').textContent = formatAngka(ringkasan.populasi_terbaru);
+      document.getElementById('tahun-terbaru').textContent = `Tahun ${ringkasan.tahun_terbaru}`;
+      document.getElementById('pertumbuhan').textContent = `${ringkasan.pertumbuhan}%`;
+      document.getElementById('rata-rata').textContent = formatAngka(ringkasan.rata_rata_tahunan);
+      if (chart) chart.destroy();
+      const context = document.getElementById('grafikPopulasi');
+      chart = new Chart(context, { type: 'line', data: { labels: populasi.tahun, datasets: [{ data: populasi.populasi, borderColor: '#2f80ed', backgroundColor: 'rgba(47,128,237,.14)', borderWidth: 3, pointRadius: 0, pointHitRadius: 14, fill: true, tension: .28 }] }, options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: item => ` ${formatAngka(item.raw)} jiwa` } } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } }, y: { grid: { color: '#edf0f5' }, ticks: { callback: value => formatAngka(value / 1000000) + ' jt' } } } } });
+      const baris = populasi.tahun.slice(-5).map((tahun, index) => `<tr><td>${tahun}</td><td>${formatAngka(populasi.populasi.slice(-5)[index])} jiwa</td></tr>`).reverse().join('');
+      document.getElementById('tabelTerbaru').innerHTML = baris;
+    }
+    document.getElementById('mulai').addEventListener('change', muatData);
+    document.getElementById('akhir').addEventListener('change', muatData);
+    muatData();
+  </script>
+</body>
+</html>
